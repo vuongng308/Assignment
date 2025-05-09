@@ -44,6 +44,7 @@ export default function LoginPage() {
       }
 
       localStorage.setItem("user", JSON.stringify({
+        userId: data.userId,
         username: data.username,
         avatar: data.avatar,
       }));

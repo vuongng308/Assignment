@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const StarRating = ({ rating, setRating }: { rating: number; setRating: (value: number) => void }) => {
+// ⭐️ Component đánh giá sao
+const StarRating = ({
+  rating,
+  setRating,
+}: {
+  rating: number;
+  setRating: (value: number) => void;
+}) => {
   return (
     <div className="flex gap-2">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -29,8 +36,51 @@ export default function ReviewPage() {
   });
   const [comment, setComment] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [maDonHang, setMaDonHang] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchLastOrder = async () => {
+      try {
+        // Lấy userId từ localStorage
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        const userId = user.userId;
+
+        if (!userId) {
+          console.error("Không tìm thấy userId trong localStorage");
+          return;
+        }
+
+        const res = await fetch(`http://localhost:3001/orders/last?userId=${userId}`);
+        const data = await res.json();
+
+        const ma = data?.donHang?.maDonHang || data?.maDonHang;
+        if (ma) {
+          setMaDonHang(ma);
+        } else {
+          console.error("Không tìm thấy đơn hàng mới nhất");
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy đơn hàng mới nhất:", error);
+      }
+    };
+
+    fetchLastOrder();
+  }, []);
 
   const handleSubmit = async () => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const userId = user.userId;
+
+    if (!userId) {
+      alert("Không tìm thấy thông tin người dùng!");
+      return;
+    }
+
+    if (!maDonHang) {
+      alert("Không tìm thấy đơn hàng để đánh giá!");
+      return;
+    }
+
     if (Object.values(ratings).some((rating) => rating === 0)) {
       alert("Vui lòng đánh giá tất cả các mục!");
       return;
@@ -44,21 +94,14 @@ export default function ReviewPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ma_khach_hang: 1,
-          ma_mon_an: 2,
+          ma_nguoi_dung: userId,
+          ma_don_hang: maDonHang,
           diem_so: ratings.overall,
           binh_luan: comment,
-          chi_tiet: {
-            service: ratings.service,
-            food: ratings.food,
-            ambiance: ratings.ambiance,
-          },
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Gửi đánh giá thất bại!");
-      }
+      if (!response.ok) throw new Error("Gửi đánh giá thất bại!");
 
       // Gửi phần thưởng
       const rewardResponse = await fetch("http://localhost:3001/phanthuong", {
@@ -67,14 +110,12 @@ export default function ReviewPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ma_khach_hang: 1,
+          ma_khach_hang: userId,
           diem_thuong: 1,
         }),
       });
 
-      if (!rewardResponse.ok) {
-        throw new Error("Gửi phần thưởng thất bại!");
-      }
+      if (!rewardResponse.ok) throw new Error("Gửi phần thưởng thất bại!");
 
       setShowSuccess(true);
     } catch (error) {
@@ -99,44 +140,25 @@ export default function ReviewPage() {
         </div>
       </header>
 
+      {/* Main */}
       <main className="pt-20 pb-8 px-4 max-w-2xl mx-auto">
         <div className="bg-[#1d1b35] rounded-xl p-6 border border-[#37335e]">
           <div className="space-y-8">
-            {/* Dịch vụ */}
-            <div className="space-y-2">
-              <h3 className="text-white font-medium">Dịch vụ</h3>
-              <StarRating
-                rating={ratings.service}
-                setRating={(value) => setRatings({ ...ratings, service: value })}
-              />
-            </div>
-
-            {/* Món ăn */}
-            <div className="space-y-2">
-              <h3 className="text-white font-medium">Món ăn</h3>
-              <StarRating
-                rating={ratings.food}
-                setRating={(value) => setRatings({ ...ratings, food: value })}
-              />
-            </div>
-
-            {/* Không gian quán */}
-            <div className="space-y-2">
-              <h3 className="text-white font-medium">Không gian quán</h3>
-              <StarRating
-                rating={ratings.ambiance}
-                setRating={(value) => setRatings({ ...ratings, ambiance: value })}
-              />
-            </div>
-
-            {/* Đánh giá chung */}
-            <div className="space-y-2">
-              <h3 className="text-white font-medium">Đánh giá chung</h3>
-              <StarRating
-                rating={ratings.overall}
-                setRating={(value) => setRatings({ ...ratings, overall: value })}
-              />
-            </div>
+            {/* Rating fields */}
+            {[
+              { label: "Dịch vụ", key: "service" },
+              { label: "Món ăn", key: "food" },
+              { label: "Không gian quán", key: "ambiance" },
+              { label: "Đánh giá chung", key: "overall" },
+            ].map(({ label, key }) => (
+              <div key={key} className="space-y-2">
+                <h3 className="text-white font-medium">{label}</h3>
+                <StarRating
+                  rating={ratings[key as keyof typeof ratings]}
+                  setRating={(value) => setRatings({ ...ratings, [key]: value })}
+                />
+              </div>
+            ))}
 
             {/* Nhận xét */}
             <div className="space-y-2">
@@ -167,9 +189,7 @@ export default function ReviewPage() {
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-white mb-4">Đánh giá thành công! 🎉</h2>
                 <p className="text-gray-300 mb-2">Cảm ơn bạn đã chia sẻ đánh giá</p>
-                <p className="text-green-400 font-medium mb-6">
-                  Bạn đã nhận 1 điểm thưởng vào tài khoản!
-                </p>
+                <p className="text-green-400 font-medium mb-6">Bạn đã nhận 1 điểm thưởng vào tài khoản!</p>
 
                 <div className="grid gap-3">
                   <button
