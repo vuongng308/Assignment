@@ -10,7 +10,13 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, //  Tự động xóa field không khai báo trong DTO
+      forbidNonWhitelisted: true, // Nếu có field lạ thì ném lỗi 400 luôn
+      transform: true, //  Tự động transform body thành DTO (quan trọng)
+    }),
+  );
 
   await app.listen(process.env.PORT ?? 3001);
 }

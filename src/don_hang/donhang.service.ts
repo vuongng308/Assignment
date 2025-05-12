@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { DonHang } from './entities/donhang.entity';
 import { ChiTietDonHang } from './entities/chitietdonhang.entity';
-import { Repository } from 'typeorm';
 
 @Injectable()
 export class DonHangService {
@@ -29,11 +29,21 @@ export class DonHangService {
     });
 
     const donHang = this.donHangRepo.create({
-      userId,
+      userId, // giữ nguyên là userId
       tongTien,
       chiTietDonHang: chiTietDonHangList,
     });
 
     return this.donHangRepo.save(donHang);
+  }
+
+  async layDonHangMoiNhat(userId?: number) {
+    const whereClause = userId ? { userId } : {};
+
+    return this.donHangRepo.findOne({
+      where: whereClause,
+      order: { maDonHang: 'DESC' },
+      relations: ['chiTietDonHang'],
+    });
   }
 }

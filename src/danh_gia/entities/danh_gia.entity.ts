@@ -1,4 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+} from 'typeorm';
+import { DonHang } from '../../don_hang/entities/donhang.entity';
 
 @Entity('danh_gia')
 export class DanhGia {
@@ -6,10 +14,9 @@ export class DanhGia {
   id: number;
 
   @Column({ name: 'ma_nguoi_dung' })
-  ma_khach_hang: number;
-
-  @Column({ name: 'ma_mon_an' })
-  ma_mon_an: number;
+  ma_nguoi_dung: number;
+  @Column({ name: 'ma_don_hang' })
+  ma_don_hang: number;
 
   @Column()
   diem_so: number;
@@ -17,7 +24,10 @@ export class DanhGia {
   @Column('text', { nullable: true })
   binh_luan: string;
 
-  @Column()
+  @CreateDateColumn({ name: 'thoi_gian_tao' })
   thoi_gian_tao: Date;
+
+  @ManyToOne(() => DonHang, (donHang) => donHang.danhGias)
+  @JoinColumn({ name: 'ma_don_hang' }) // khoá ngoại
+  donHang: DonHang;
 }
-export {};

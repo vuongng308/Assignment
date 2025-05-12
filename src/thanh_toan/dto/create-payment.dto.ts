@@ -1,7 +1,18 @@
+import { IsBoolean, IsDateString, IsNumber, IsString } from 'class-validator';
+
 export class CreateThanhToanDto {
+  @IsNumber()
   ma_don_hang: number;
+
+  @IsString()
   phuong_thuc_thanh_toan: string;
-  so_tien: number;
+
+  @IsNumber()
+  so_tien: number; // Thêm validation cho so_tien
+
+  @IsBoolean()
   thanh_cong: boolean;
-  thoi_gian_thanh_toan: Date;
+
+  @IsDateString()
+  thoi_gian_thanh_toan: Date; // Đảm bảo thoi_gian_thanh_toan là kiểu Date hợp lệ
 }

@@ -6,7 +6,7 @@ export class PhanThuongController {
   constructor(private readonly phanThuongService: PhanThuongService) {}
 
   @Post()
-  taoPhanThuong(@Body() body: any) {
-    return this.phanThuongService.taoPhanThuong(body);
+  async taoHoacCapNhat(@Body() body: { ma_khach_hang: number; diem_thuong: number }) {
+    return this.phanThuongService.taoHoacCapNhatPhanThuong(body);
   }
 }

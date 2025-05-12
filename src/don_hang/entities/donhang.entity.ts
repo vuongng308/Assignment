@@ -1,6 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { ChiTietDonHang } from './chitietdonhang.entity';
 import { ThanhToan } from '../../thanh_toan/entities/thanh_toan.entity';
+import { DanhGia } from '../../danh_gia/entities/danh_gia.entity';
 
 @Entity('don_hang')
 export class DonHang {
@@ -30,4 +31,7 @@ export class DonHang {
 
   @OneToMany(() => ThanhToan, (tt) => tt.donHang)
   thanhToans: ThanhToan[];
+
+  @OneToMany(() => DanhGia, (danhGia) => danhGia.donHang)
+  danhGias: DanhGia[];
 }

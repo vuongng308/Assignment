@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { DonHangService } from './donhang.service';
 
 @Controller('orders')
@@ -19,9 +19,23 @@ export class DonHangController {
     return {
       donHang: {
         maDonHang: donHang.maDonHang,
-        tongTien: donHang.tongTien, // có thể thêm nếu muốn
+        tongTien: donHang.tongTien,
       },
     };
   }
+
+  @Get('last')
+  async getLastOrder(@Query('userId') userId?: number) {
+    const order = await this.donHangService.layDonHangMoiNhat(userId);
+
+    if (!order) {
+      return {
+        message: 'Không tìm thấy đơn hàng nào cho người dùng này!',
+        statusCode: 404,
+      };
+    }
+    return {
+      donHang: order,
+    };
+  }
 }
-export {};

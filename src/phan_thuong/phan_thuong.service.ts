@@ -10,21 +10,27 @@ export class PhanThuongService {
     private readonly phanThuongRepo: Repository<PhanThuong>,
   ) {}
 
-  async taoPhanThuong(data: Partial<PhanThuong>): Promise<PhanThuong> {
-    const phanThuong = this.phanThuongRepo.create({
-      ...data,
-      thoi_gian_tao: new Date(),
-    });
-    return await this.phanThuongRepo.save(phanThuong);
-  }
-  async insertPhanThuong(body: {
+  async taoHoacCapNhatPhanThuong(body: {
     ma_khach_hang: number;
     diem_thuong: number;
-  }): Promise<void> {
-    await this.phanThuongRepo.insert({
-      ma_khach_hang: body.ma_khach_hang,
-      diem: body.diem_thuong,
-      thoi_gian_tao: new Date(),
+  }): Promise<PhanThuong> {
+    let phanThuong = await this.phanThuongRepo.findOne({
+      where: { ma_khach_hang: body.ma_khach_hang },
     });
+
+    if (phanThuong) {
+      // Nếu đã tồn tại → cộng dồn điểm
+      phanThuong.diem += body.diem_thuong;
+      phanThuong.thoi_gian_tao = new Date();
+    } else {
+      // Nếu chưa tồn tại → tạo mới
+      phanThuong = this.phanThuongRepo.create({
+        ma_khach_hang: body.ma_khach_hang,
+        diem: body.diem_thuong,
+        thoi_gian_tao: new Date(),
+      });
+    }
+
+    return await this.phanThuongRepo.save(phanThuong);
   }
 }

@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, Param, Put } from '@nestjs/common';
 import { ThanhToanService } from './thanh_toan.service';
-import { CreateThanhToanDto } from './dto/create-payment.dto';
+import { CreateThanhToanDto } from './dto/create-payment.dto'; // Cập nhật import DTO mới
 import { ThanhToan } from './entities/thanh_toan.entity';
 
 @Controller('thanh-toan')
@@ -9,7 +9,9 @@ export class ThanhToanController {
 
   // Tạo mới một bản ghi thanh toán
   @Post()
-  async create(@Body() createThanhToanDto: CreateThanhToanDto): Promise<ThanhToan> {
+  async create(
+    @Body() createThanhToanDto: CreateThanhToanDto,
+  ): Promise<ThanhToan> {
     return this.thanhToanService.createThanhToan(createThanhToanDto); // Đổi từ create() sang createThanhToan()
   }
 
@@ -21,10 +23,10 @@ export class ThanhToanController {
   ): Promise<ThanhToan> {
     return this.thanhToanService.updateThanhToan(id, updateThanhToanDto);
   }
-
-  // Lấy danh sách thanh toán theo mã đơn hàng
   @Get('don-hang/:maDonHang')
-  async findByDonHang(@Param('maDonHang') maDonHang: number): Promise<ThanhToan[]> {
+  async findByDonHang(
+    @Param('maDonHang') maDonHang: number,
+  ): Promise<ThanhToan[]> {
     return this.thanhToanService.findByDonHangId(maDonHang);
   }
 }

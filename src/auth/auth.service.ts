@@ -40,18 +40,22 @@ export class AuthService {
   }
 
   async login(email: string, password: string): Promise<any> {
-    // Tìm người dùng theo email
     const user = await this.userRepository.findOne({ where: { email } });
 
     if (!user || user.password !== password) {
       throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
     }
 
-    // Xóa mật khẩu khỏi đối tượng trả về
     const { password: _, ...result } = user;
-    return result;
-  }
 
+    return {
+      userId: result.ma_nguoi_dung,
+      username: result.username,
+      email: result.email,
+      fullName: result.ho_ten,
+      avatar: '/images/user.svg', // Dùng mặc định luôn, vì không có trong DB
+    };
+  }
   // async updateUserInfo(userId: number, updateUserDto: UpdateUserDto): Promise<string> {
   //   try {
   //     // Tìm người dùng theo ma_nguoi_dung
