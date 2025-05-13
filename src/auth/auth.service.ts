@@ -3,6 +3,7 @@ import {
   ConflictException,
   InternalServerErrorException,
   UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -17,10 +18,10 @@ export class AuthService {
     private userRepository: Repository<User>,
   ) {}
 
+  // Đăng ký tài khoản mới
   async register(registerDto: RegisterDto): Promise<string> {
     const { username, password, email } = registerDto;
 
-    // Tạo đối tượng user mới
     const user = this.userRepository.create({
       username,
       password,
@@ -28,7 +29,6 @@ export class AuthService {
     });
 
     try {
-      // Lưu người dùng vào CSDL
       await this.userRepository.save(user);
       return 'Đăng ký thành công!';
     } catch (err) {
@@ -39,6 +39,7 @@ export class AuthService {
     }
   }
 
+  // Đăng nhập
   async login(email: string, password: string): Promise<any> {
     const user = await this.userRepository.findOne({ where: { email } });
 
@@ -53,24 +54,43 @@ export class AuthService {
       username: result.username,
       email: result.email,
       fullName: result.ho_ten,
-      avatar: '/images/user.svg', // Dùng mặc định luôn, vì không có trong DB
+      avatar: '/images/user.svg',
     };
   }
-  // async updateUserInfo(userId: number, updateUserDto: UpdateUserDto): Promise<string> {
-  //   try {
-  //     // Tìm người dùng theo ma_nguoi_dung
-  //     const user = await this.userRepository.findOne({ where: { ma_nguoi_dung: userId } });
 
-  //     if (!user) {
-  //       throw new InternalServerErrorException('Người dùng không tồn tại');
-  //     }
+  // Cập nhật thông tin người dùng
+  async updateUserInfo(
+    userId: number,
+    updateUserDto: UpdateUserDto,
+  ): Promise<string> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { ma_nguoi_dung: userId },
+      });
 
-  //     // Cập nhật thông tin người dùng
-  //     Object.assign(user, updateUserDto);
-  //     await this.userRepository.save(user);
-  //     return 'Cập nhật thông tin thành công';
-  //   } catch (error) {
-  //     throw new InternalServerErrorException('Lỗi khi cập nhật thông tin');
-  //   }
-  // }
+      if (!user) {
+        throw new InternalServerErrorException('Người dùng không tồn tại');
+      }
+
+      // Gộp firstName và lastName nếu có
+      const { firstName, lastName, ...rest } = updateUserDto;
+
+      const ho_ten = [firstName, lastName]
+        .filter(Boolean) // Loại bỏ undefined/null
+        .join(' ')
+        .trim(); // Gộp lại thành chuỗi "Vu Hoang"
+
+      if (ho_ten) {
+        user.ho_ten = ho_ten;
+      }
+
+      // Gán các trường còn lại
+      Object.assign(user, rest);
+
+      await this.userRepository.save(user);
+      return 'Cập nhật thông tin thành công';
+    } catch (error) {
+      throw new InternalServerErrorException('Lỗi khi cập nhật thông tin');
+    }
+  }
 }
